@@ -72,6 +72,12 @@ def forecast_case(case):
     hours_out = []
     for h in range(2, 25):
         ratios = sorted(c[h] / c[1] for c in curves if h in c)
+        if ratios:
+            # Winsorize: cap every ratio at this hour's own 95th
+            # percentile, so a single outlier launch cannot inflate the
+            # upper quantiles (notably q95).
+            cap = quantile_type7(ratios, 0.95)
+            ratios = [min(r, cap) for r in ratios]
         qs = []
         for tau in levels:
             if ratios:
